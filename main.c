@@ -15,50 +15,37 @@
 int procCount = 0;
 int proces[MAX_PROCESS];
 int ischild=-1;
+int silent = 0;
 
 
 void ProcesRun(char *, char* argv[]);
 void InputParser(char*);
 
-void KillChild(sig_t  s)
+void KillChild()
 {
-    if(s!=2)
-    {
-        return;
-    }
-    if(ischild==1)
-        return;    
-    printf("Caught signal %d\n",s);
     if(procCount>0)
     {
         printf("Kill Pid %d\n",proces[--procCount]);
-        kill(proces[procCount],SIGTERM);
+        kill(proces[procCount],15);
     }
     else
     {
         printf("No Children \n Exiting\n");
-        exit(0);
     }           
 }
 
 
 int main(int argc, char *argv[])
 {
-   struct sigaction sigIntHandler;
-
-
-   sigIntHandler.sa_handler = KillChild;
-   sigemptyset(&sigIntHandler.sa_mask);
-   sigIntHandler.sa_flags = 0;
-
-   sigaction(SIGINT, &sigIntHandler, NULL);
-
-
     char input[MAX_COMMANDLEN];
 
     do
     {
-        printf("Use -r {name} -o {options}\n");
+        if(silent==0&&procCount>0)
+        {
+             printf("Use -r {name} -o {options}\n");         
+        }
+       
         fgets(input, MAX_COMMANDLEN, stdin);
         InputParser(&input);
 
@@ -82,9 +69,10 @@ void InputParser(char* input)
     int opt;
     struct option longopts[]=
     {     
-        {"help",0,NULL,'h'},
         {"run",1,NULL,'r'},
         {"option",1,NULL,'o'},
+        {"silent",0,NULL,'s'},
+        {"kill",0,NULL,'k'},
         {0,0,0,0}
     };
     char *argvToRun[MAX_OPTIONS];
@@ -92,13 +80,10 @@ void InputParser(char* input)
     int needRun = -1;
     char* name;
 
-        while ((opt=getopt_long(argc,argv,":hr:o:",longopts,NULL))!=-1)
+        while ((opt=getopt_long(argc,argv,":skr:o:",longopts,NULL))!=-1)
     {
         switch (opt)
         {
-            case 'h':
-                printf("No help for u\n");    
-                break;
             case 'r':
                 if(optarg!=NULL)
                     name=optarg;
@@ -110,6 +95,12 @@ void InputParser(char* input)
                 break;    
             case 'o':
                 argvToRun[argCToRun++]=optarg;
+                break;
+            case 'k':
+                KillChild();
+                return;
+            case 's':
+                silent = 1;
                 break;
             case ':':
                 printf("Options needs a value\n");
@@ -138,12 +129,10 @@ void ProcesRun(char * name, char* argv[])
             perror("Fork Error\n");
             exit(1);
         case 0:
-            ischild=1;
             execv(name,argv);
-            exit(1);
             break;
         default:
-            printf("Forked with pid%d\n",pid);
+            printf("Forked with pid %d\n",pid);
             proces[procCount++]=pid;
 
     }
