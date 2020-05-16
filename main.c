@@ -22,17 +22,21 @@ void InputParser(char*);
 
 void KillChild(sig_t  s)
 {
+    if(s!=2)
+    {
+        return;
+    }
     if(ischild==1)
         return;    
     printf("Caught signal %d\n",s);
     if(procCount>0)
     {
-        printf("Kill Pid %d\n",proces[procCount]);
-        kill(proces[procCount--],0);
+        printf("Kill Pid %d\n",proces[--procCount]);
+        kill(proces[procCount],SIGTERM);
     }
     else
     {
-        printf("No Children \n Existing\n");
+        printf("No Children \n Exiting\n");
         exit(0);
     }           
 }
