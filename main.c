@@ -28,7 +28,7 @@ void KillChild(sig_t  s){
            }
            else
            {
-               printf("No Children \n Exiting\n");
+               printf("No Children \n Existing\n");
                exit(0);
            }           
 }
