@@ -14,23 +14,27 @@
 
 int procCount = 0;
 int proces[MAX_PROCESS];
+int ischild=-1;
 
 
 void ProcesRun(char *, char* argv[]);
 void InputParser(char*);
 
-void KillChild(sig_t  s){
-           printf("Caught signal %d\n",s);
-           if(procCount!=0)
-           {
-               kill(proces[procCount],0);
-               procCount--;
-           }
-           else
-           {
-               printf("No Children \n Existing\n");
-               exit(0);
-           }           
+void KillChild(sig_t  s)
+{
+    if(ischild==1)
+        return;    
+    printf("Caught signal %d\n",s);
+    if(procCount>0)
+    {
+        printf("Kill Pid %d\n",proces[procCount]);
+        kill(proces[procCount--],0);
+    }
+    else
+    {
+        printf("No Children \n Existing\n");
+        exit(0);
+    }           
 }
 
 
@@ -130,10 +134,12 @@ void ProcesRun(char * name, char* argv[])
             perror("Fork Error\n");
             exit(1);
         case 0:
-            printf("Forked\n");
+            ischild=1;
             execv(name,argv);
+            exit(1);
             break;
         default:
+            printf("Forked with pid%d\n",pid);
             proces[procCount++]=pid;
 
     }
